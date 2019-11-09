@@ -6,6 +6,7 @@ using namespace std;
 enum state{Visited, Unvisited};
 char map[1000][1000];
 int dis_map[1000][1000], m, n;
+state check_map[1000][1000];
 
 class QueueList;
 class QueueNode{
@@ -149,7 +150,7 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
             //cout << i << ' ' << j << endl;
-            if(map[i][j]=='0') map_state[i][j] = Unvisited;
+            if(map[i][j]=='0' || map[i][j]=='R') map_state[i][j] = Unvisited;
         }
     }
 
@@ -172,7 +173,7 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
                 temp_x = p.first - 1;
                 temp_y = p.second;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && map[temp_x][temp_y] == '0'){
+                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
                     QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
                     temp2->next1 = temp1;
                     que.Push(temp2);
@@ -193,7 +194,7 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
                 temp_x = p.first + 1;
                 temp_y = p.second;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && map[temp_x][temp_y] == '0'){
+                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
                     QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
                     que.Push(temp2);
                     temp2->next1 = temp1;
@@ -214,7 +215,7 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
                 temp_x = p.first;
                 temp_y = p.second + 1;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && map[temp_x][temp_y] == '0'){
+                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
                     QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
                     que.Push(temp2);
                     temp2->next1 = temp1;
@@ -235,7 +236,7 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
                 temp_x = p.first;
                 temp_y = p.second - 1;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && map[temp_x][temp_y] == '0'){
+                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
                     QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
                     que.Push(temp2);
                     temp2->next1 = temp1;
@@ -256,6 +257,16 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
     }
     return 0;
 }
+
+bool is_clean(){
+    for(int i=0; i<m; i++){
+        for(int j=0; j<n; j++){
+            if(check_map[i][j] == Unvisited) return false;
+        }
+    }
+    return true;
+}
+
 
 int main(){
     // Read file
@@ -290,34 +301,56 @@ int main(){
     my_BFS(R_x, R_y);
 
     // 等等要用while迴圈包起來 檢查如果還有沒有清乾淨的點 就繼續 否則 遊戲結束!!!
-
-    state map_state[m][n];
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
             //cout << i << ' ' << j << endl;
-            if(map[i][j]=='0') map_state[i][j] = Unvisited;
+            if(map[i][j]=='0' || map[i][j]=='R') check_map[i][j] = Unvisited;
+            else if(map[i][j]=='1') check_map[i][j] = Visited;
         }
     }
-
-    int target_x=0, target_y=0, max_dis=0;
-    for(int i=0; i<m; i++){
-        for(int j=0; j<n; j++){
-            if(dis_map[i][j] >= max_dis) {
-                max_dis = dis_map[i][j];
-                target_x = i;
-                target_y = j;
+    ofstream output("floor.final");
+    output << "0" << endl;
+    int count = 0;
+    while(!is_clean()){     
+        int target_x=0, target_y=0, max_dis=0;
+        for(int i=0; i<m; i++){
+            for(int j=0; j<n; j++){
+                if(dis_map[i][j] >= max_dis && check_map[i][j] == Unvisited) {
+                    max_dis = dis_map[i][j];
+                    target_x = i;
+                    target_y = j;
+                }
             }
         }
-    }
-    QueueNode *start = new QueueNode(make_pair(R_x, R_y));
-    QueueNode *target = new QueueNode(make_pair(target_x, target_y));
+        QueueNode *start = new QueueNode(make_pair(R_x, R_y));
+        QueueNode *target = new QueueNode(make_pair(target_x, target_y));
+        // from R to target
+        QueueNode *root = find_path(target, start);
 
-    QueueNode *root = find_path(start, target);
-
-    while(root!=0){
-        cout << root->data.first << " " << root->data.second << endl;
-        root = root->next1;
+        while(root->next1!=0){
+            check_map[root->data.first][root->data.second] = Visited;
+            //cout << root->data.first << " " << root->data.second << endl;
+            output << root->data.first << " " << root->data.second << endl;
+            root = root->next1;
+            count++;
+        }
+        // from target to R
+        root = find_path(start, target);
+        //root = root->next1;
+        while(root->next1!=0){
+            check_map[root->data.first][root->data.second] = Visited;
+            //cout << root->data.first << " " << root->data.second << endl;
+            output << root->data.first << " " << root->data.second << endl;
+            root = root->next1;
+            count++;
+        }  
     }
+    //cout << R_x << " " << R_y << endl;
+    output << R_x << " " << R_y << endl;
+
+    output.seekp(0, ios::beg);
+    //cout << count;
+    output << count;
 
     // Debug
     /*for (int i=0; i<m; i++) {
@@ -327,12 +360,12 @@ int main(){
         cout << endl;
     }*/
 
-    for (int i=0; i<m; i++) {
+    /*for (int i=0; i<m; i++) {
         for (int j=0; j<n; j++) {
             printf("%3d ", dis_map[i][j]);
         }
         cout << endl;
-    }
+    }*/
 
     // Debug myqueue
     /*QueueList *head = new QueueList();
