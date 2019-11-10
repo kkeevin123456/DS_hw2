@@ -309,8 +309,10 @@ int main(){
         }
     }
     ofstream output("floor.final");
-    output << "0" << endl;
+    //output << "         " << endl;
     int count = 0;
+    QueueList ans;
+    QueueNode *temp;
     while(!is_clean()){     
         int target_x=0, target_y=0, max_dis=0;
         for(int i=0; i<m; i++){
@@ -330,7 +332,9 @@ int main(){
         while(root->next1!=0){
             check_map[root->data.first][root->data.second] = Visited;
             //cout << root->data.first << " " << root->data.second << endl;
-            output << root->data.first << " " << root->data.second << endl;
+            //output << root->data.first << " " << root->data.second << endl;
+            temp = new QueueNode(make_pair(root->data.first, root->data.second));
+            ans.Push(temp);
             root = root->next1;
             count++;
         }
@@ -340,17 +344,41 @@ int main(){
         while(root->next1!=0){
             check_map[root->data.first][root->data.second] = Visited;
             //cout << root->data.first << " " << root->data.second << endl;
-            output << root->data.first << " " << root->data.second << endl;
+            //output << root->data.first << " " << root->data.second << endl;
+            temp = new QueueNode(make_pair(root->data.first, root->data.second));
+            ans.Push(temp);
             root = root->next1;
             count++;
         }  
     }
     //cout << R_x << " " << R_y << endl;
-    output << R_x << " " << R_y << endl;
+    //output << R_x << " " << R_y << endl;
+    temp = new QueueNode(make_pair(R_x, R_y));
+    ans.Push(temp);
 
-    output.seekp(0, ios::beg);
+    temp = ans.getFront();
+    ans.Pop();
+    output << count << endl;
+    while(temp!=0){
+        output << temp->data.first << " " << temp->data.second << endl;
+        temp = ans.getFront();
+        ans.Pop();
+    }
+
+    /*output.seekp(0, ios::beg);
+    ifstream in("floor.final");
     //cout << count;
-    output << count;
+    //output << count;
+    string temp1_in, temp2_in, t1, t2;
+    in >> temp1_in >> temp2_in;
+    t1 = temp1_in;
+    t2 = temp2_in;
+    output << count << endl;
+    output << temp1_in << " " << temp2_in << endl;
+    while(!in.eof()){
+        in >> temp1_in >> temp2_in;
+        output << temp1_in << " " << temp2_in << endl;
+    }*/
 
     // Debug
     /*for (int i=0; i<m; i++) {
