@@ -14,9 +14,9 @@ class QueueNode{
     public:
         pair <int, int> data;
         QueueNode *next;
-        QueueNode *next1;
-        QueueNode():data(0, 0), next(0){};
-        QueueNode(pair <int, int> x):data(x), next(0){};
+        QueueNode *prev;
+        QueueNode():data(0, 0), next(0), prev(0){};
+        QueueNode(pair <int, int> x):data(x), next(0), prev(0){};
 };
 
 class QueueList{
@@ -28,6 +28,7 @@ class QueueList{
         QueueList():front(0), back(0), size(0){};
         void Push(QueueNode *node);
         void Pop();
+        void Pop_back();
         bool IsEmpty();
         QueueNode *getFront();
         QueueNode *getBack();
@@ -41,9 +42,11 @@ void QueueList::Push(QueueNode *node){
         size = 1;
         return;
     }
+    if(node == nullptr) return;
 
+    node->prev = back;
     back->next = node;
-    back = back->next;
+    back = node;
     size++;
 }
 
@@ -52,9 +55,31 @@ void QueueList::Pop(){
 
     QueueNode *temp = front;
     front = front->next;
+
+    if(front == 0)
+        back = 0;
+    else
+        front->prev = 0;
+
     size--;
-    /*delete temp;
-    temp = 0;*/
+    delete temp;
+    temp = 0;
+}
+
+void QueueList::Pop_back(){
+    if(IsEmpty()) return;
+
+    QueueNode *temp = back;
+    back = back->prev;
+
+    if (back == 0)
+        front == 0;
+    else
+        back->next = 0;
+
+    size--;
+    delete temp;
+    temp = 0;
 }
 
 QueueNode *QueueList::getFront(){
@@ -143,28 +168,20 @@ void my_BFS(int x, int y){
     }
 }
 
-QueueNode *find_path(QueueNode *start, QueueNode *target){
-    QueueList que;
-    // initialize map_state  dis_map
-    state map_state[m][n];
-    for(int i=0; i<m; i++){
-        for(int j=0; j<n; j++){
-            //cout << i << ' ' << j << endl;
-            if(map[i][j]=='0' || map[i][j]=='R') map_state[i][j] = Unvisited;
-        }
-    }
+QueueList find_path(QueueNode *start, QueueNode *target){
+    // if only point 'R' return it
+    //if(start->data.first == target->data.first && start->data.second == target->data.second)
+        //return start;
 
-    que.Push(start);
-    while(!que.IsEmpty()){
-        // pick a node from que.front
-        pair<int, int> p = que.getFront()->data;
-        QueueNode *temp1 = que.getFront();
+    QueueList path;
+    QueueNode *temp = new QueueNode(make_pair(target->data.first, target->data.second));
+    path.Push(temp);
 
-        //cout << "temp1 before pop: " << temp1->data.first << " " << temp1->data.second << endl;
+    if(start->data.first == target->data.first && start->data.second == target->data.second)
+        return path;
 
-        que.Pop();
-        //cout << "temp1 after pop: " << temp1->data.first << " " << temp1->data.second << endl;
-        map_state[p.first][p.second] = Visited;
+    while(1){
+        pair<int, int> p = path.getBack()->data;
 
         int temp_x, temp_y; // new point
         // go through all points
@@ -173,89 +190,47 @@ QueueNode *find_path(QueueNode *start, QueueNode *target){
                 temp_x = p.first - 1;
                 temp_y = p.second;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
-                    QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
-                    temp2->next1 = temp1;
-                    que.Push(temp2);
-
-                    /*QueueNode *root = temp2;
-                    while(root!=0){
-                        cout << root->data.first << " " << root->data.second << endl;
-                        root = root->next1;
-                    }
-                    cout << endl;*/
-
-                    if(temp_x == target->data.first && temp_y == target->data.second){ // find target
-                        return temp2;
-                    }
+                else if(dis_map[temp_x][temp_y] < dis_map[p.first][p.second] && dis_map[temp_x][temp_y] != -1){
+                    QueueNode *temp = new QueueNode(make_pair(temp_x, temp_y));
+                    path.Push(temp);
+                    break;
                 }
             }
             else if(i==1){  // direction down
                 temp_x = p.first + 1;
                 temp_y = p.second;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
-                    QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
-                    que.Push(temp2);
-                    temp2->next1 = temp1;
-
-                    /*QueueNode *root = temp2;
-                    while(root!=0){
-                        cout << root->data.first << " " << root->data.second << endl;
-                        root = root->next1;
-                    }
-                    cout << endl;*/
-
-                    if(temp_x == target->data.first && temp_y == target->data.second){ // find target
-                        return temp2;
-                    }
+                else if(dis_map[temp_x][temp_y] < dis_map[p.first][p.second] && dis_map[temp_x][temp_y] != -1){
+                    QueueNode *temp = new QueueNode(make_pair(temp_x, temp_y));
+                    path.Push(temp);
+                    break;
                 }
             }
             else if(i==2){ // direction right
                 temp_x = p.first;
                 temp_y = p.second + 1;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
-                    QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
-                    que.Push(temp2);
-                    temp2->next1 = temp1;
-
-                    /*QueueNode *root = temp2;
-                    while(root!=0){
-                        cout << root->data.first << " " << root->data.second << endl;
-                        root = root->next1;
-                    }
-                    cout << endl;*/
-
-                    if(temp_x == target->data.first && temp_y == target->data.second){ // find target
-                        return temp2;
-                    }
+                else if(dis_map[temp_x][temp_y] < dis_map[p.first][p.second] && dis_map[temp_x][temp_y] != -1){
+                    QueueNode *temp = new QueueNode(make_pair(temp_x, temp_y));
+                    path.Push(temp);
+                    break;
                 }
             }
             else if(i==3){ // direction left
                 temp_x = p.first;
                 temp_y = p.second - 1;
                 if(temp_x < 0 || temp_y < 0 || temp_x >= m || temp_y >= n) continue;
-                else if(map_state[temp_x][temp_y] == Unvisited && (map[temp_x][temp_y] == '0' || map[temp_x][temp_y] == 'R')){
-                    QueueNode *temp2 = new QueueNode(make_pair(temp_x, temp_y));
-                    que.Push(temp2);
-                    temp2->next1 = temp1;
-
-                    /*QueueNode *root = temp2;
-                    while(root!=0){
-                        cout << root->data.first << " " << root->data.second << endl;
-                        root = root->next1;
-                    }
-                    cout << endl;*/
-
-                    if(temp_x == target->data.first && temp_y == target->data.second){ // find target
-                        return temp2;
-                    }
+                else if(dis_map[temp_x][temp_y] < dis_map[p.first][p.second] && dis_map[temp_x][temp_y] != -1){
+                    QueueNode *temp = new QueueNode(make_pair(temp_x, temp_y));
+                    path.Push(temp);
+                    break;
                 }
             }
         }
+        if(dis_map[temp_x][temp_y] == 0)
+            return path;
     }
-    return 0;
+    //return 0;
 }
 
 bool is_clean(){
@@ -313,7 +288,9 @@ int main(){
     int count = 0;
     QueueList ans;
     QueueNode *temp;
-    while(!is_clean()){     
+    QueueNode *temp1;
+    QueueNode *temp2;
+    while(!is_clean()){
         int target_x=0, target_y=0, max_dis=0;
         for(int i=0; i<m; i++){
             for(int j=0; j<n; j++){
@@ -327,29 +304,43 @@ int main(){
         QueueNode *start = new QueueNode(make_pair(R_x, R_y));
         QueueNode *target = new QueueNode(make_pair(target_x, target_y));
         // from R to target
-        QueueNode *root = find_path(target, start);
+        QueueList path = find_path(start, target);
+        QueueList reverse_path;
+        check_map[R_x][R_y] = Visited;
+        while(path.getSize()!=1){
+            temp = path.getBack();
+            temp1 = new QueueNode(make_pair(temp->data.first, temp->data.second));
+            reverse_path.Push(temp1);
+            //path->Pop();
 
-        while(root->next1!=0){
-            check_map[root->data.first][root->data.second] = Visited;
+            check_map[temp1->data.first][temp1->data.second] = Visited;
             //cout << root->data.first << " " << root->data.second << endl;
             //output << root->data.first << " " << root->data.second << endl;
-            temp = new QueueNode(make_pair(root->data.first, root->data.second));
-            ans.Push(temp);
-            root = root->next1;
+            int x = temp1->data.first;
+            int y = temp1->data.second;
+            temp2 = new QueueNode(make_pair(x, y));
+            ans.Push(temp2);
+            path.Pop_back();
             count++;
         }
-        // from target to R
-        root = find_path(start, target);
+        temp = path.getBack();
+        temp1 = new QueueNode(make_pair(temp->data.first, temp->data.second));
+        reverse_path.Push(temp1);
+        path.Pop_back();
         //root = root->next1;
-        while(root->next1!=0){
-            check_map[root->data.first][root->data.second] = Visited;
+        while(reverse_path.getSize()!=1){
+            temp = reverse_path.getBack();
+            //temp1 = new QueueNode(make_pair(temp->data.first, temp->data.second));
+
+            check_map[temp->data.first][temp->data.second] = Visited;
             //cout << root->data.first << " " << root->data.second << endl;
             //output << root->data.first << " " << root->data.second << endl;
-            temp = new QueueNode(make_pair(root->data.first, root->data.second));
-            ans.Push(temp);
-            root = root->next1;
+            temp2 = new QueueNode(make_pair(temp->data.first, temp->data.second));
+            ans.Push(temp2);
+
+            reverse_path.Pop_back();
             count++;
-        }  
+        }
     }
     //cout << R_x << " " << R_y << endl;
     //output << R_x << " " << R_y << endl;
@@ -357,13 +348,18 @@ int main(){
     ans.Push(temp);
 
     temp = ans.getFront();
-    ans.Pop();
     output << count << endl;
+    //cout << count << endl;
     while(temp!=0){
         output << temp->data.first << " " << temp->data.second << endl;
-        temp = ans.getFront();
+        //cout << temp->data.first << " " << temp->data.second << endl;
         ans.Pop();
+        temp = ans.getFront();
     }
+
+
+
+
 
     /*output.seekp(0, ios::beg);
     ifstream in("floor.final");
@@ -378,7 +374,7 @@ int main(){
     while(!in.eof()){
         in >> temp1_in >> temp2_in;
         output << temp1_in << " " << temp2_in << endl;
-    }*/
+    }
 
     // Debug
     /*for (int i=0; i<m; i++) {
