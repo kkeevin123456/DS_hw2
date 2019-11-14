@@ -4,9 +4,9 @@
 using namespace std;
 
 enum state{Visited, Unvisited};
-char map[1000][1000];
-int dis_map[1000][1000], m, n;
-state check_map[1000][1000];
+char map[1001][1001];
+int dis_map[1001][1001], m, n;
+state check_map[1001][1001];
 
 class QueueList;
 class QueueNode{
@@ -283,7 +283,7 @@ int main(){
             else if(map[i][j]=='1') check_map[i][j] = Visited;
         }
     }
-    ofstream output("floor.final");
+    ofstream output("final.path");
     //output << "         " << endl;
     int count = 0;
     QueueList ans;
